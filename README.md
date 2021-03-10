@@ -1,4 +1,4 @@
-# HSECV
--[] Choose task
-- [] Find dataset
-- [] Research
+### Tasks
+- [ ] Choose task
+- [ ] Find dataset
+- [ ] Research
