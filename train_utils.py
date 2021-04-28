@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, recall_score
 from torch import optim
 import numpy as np
 
@@ -38,6 +38,15 @@ def metrics(pred, target):
 
     return acc, f1
 
+def recall_calculate(pred, target):
+    pred = torch.sigmoid(pred)
+    pred = pred >= 0.5
+    pred_np = pred.reshape(1, -1).data.to("cpu").numpy()[0].astype(int)
+    target_np = target.reshape(1, -1).data.to("cpu").numpy()[0].astype(int)
+    recc = recall_score(pred_np, target_np)
+
+    return recc
+
 
 class AvgMeter(object):
     def __init__(self, num=40):
@@ -64,14 +73,13 @@ class AvgMeter(object):
         )
 
 
-"""
+
 def dice_loss(pred, target, smooth=1e-5):
+    pred = torch.sigmoid(pred)
     intersection = (pred * target).sum(dim=(2,3))
     union = pred.sum(dim=(2,3)) + target.sum(dim=(2,3))
     dice = 2.0 * (intersection + smooth) / (union + smooth)
     loss = 1 - dice
     
-    return loss.sum(), dice.sum()
-
-
-"""
+    # return loss.sum(), dice.sum()
+    return loss.sum()

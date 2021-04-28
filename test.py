@@ -17,7 +17,15 @@ def get_test_score(
     model.eval()
     # init loss and metrics lists
     criterion = structure_loss
-    running_loss_test, running_accuracy_test, running_f1_test = (
+    (
+        running_loss_test,
+        running_accuracy_test,
+        running_f1_test,
+        running_dice_test,
+        running_recall_test,
+    ) = (
+        AvgMeter(),
+        AvgMeter(),
         AvgMeter(),
         AvgMeter(),
         AvgMeter(),
@@ -32,13 +40,21 @@ def get_test_score(
             # loss and metrics
             loss = criterion(yhat, y)
             acc, f1 = metrics(yhat, y)
+            dice_check = dice_loss(yhat, y)
+            recc = recall_calculate(yhat, y)
             # update metrics
-            running_loss_test.update(loss.data, 8)
-            running_accuracy_test.update(torch.Tensor([acc]), 8)
-            running_f1_test.update(torch.Tensor([f1]), 8)
+            running_loss_test.update(loss.data, 1)
+            running_dice_test.update(dice_check.data, 1)
+            running_accuracy_test.update(torch.Tensor([acc]), 1)
+            running_f1_test.update(torch.Tensor([f1]), 1)
+            running_recall_test.update(torch.Tensor([recc]), 1)
 
     res_loss = round(running_loss_test.show().item(), 3)
     res_accuracy = round(running_accuracy_test.show().item(), 3)
     res_f1 = round(running_f1_test.show().item(), 3)
+    res_dice = round(running_dice_test.show().item(), 3)
+    res_recall = round(running_recall_test.show().item(), 3)
 
-    print(f"TEST: Loss: {res_loss}, Accuracy: {res_accuracy}, F1: {res_f1}")
+    print(
+        f"TEST: Loss: {res_loss}, Accuracy: {res_accuracy}, F1: {res_f1}, Dice: {res_dice}, Recall: {res_recall}"
+    )

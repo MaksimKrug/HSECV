@@ -136,15 +136,15 @@ def get_args():
         "--batch-size", type=int, default=1, help="Batch size", dest="batch_size",
     )
     parser.add_argument(
+        "--resize", dest="resize", type=int, default=100, help="Image resize size???",
+    )
+    parser.add_argument(
         "--learning-rate",
         metavar="LR",
         type=float,
         default=0.0001,
         help="Learning rate",
         dest="lr",
-    )
-    parser.add_argument(
-        "--resize", dest="resize", type=int, default=100, help="Image resize size???",
     )
 
     return parser.parse_args()
@@ -163,8 +163,13 @@ if __name__ == "__main__":
 
     # train
     train_loss, train_accuracy, train_f1, val_loss, val_accuracy, val_f1 = train(
-        model, dataloader_train=dataloader_train, dataloader_val=dataloader_val, epochs_num=args.epochs_num,
+        model,
+        dataloader_train=dataloader_train,
+        dataloader_val=dataloader_val,
+        epochs_num=args.epochs_num,
     )
 
     # train viz
-    train_visualization(train_loss, train_accuracy, train_f1, val_loss, val_accuracy, val_f1)
+    train_visualization(
+        train_loss, train_accuracy, train_f1, val_loss, val_accuracy, val_f1
+    )

@@ -10,25 +10,28 @@ from PIL import Image
 from model import *
 
 
-def pred_and_viz(img_path, mask_path, model_path: str = "baseline_model.pth", resize:int = 212):
+def pred_and_viz(
+    img_path, mask_path, model_path: str = "baseline_model.pth", resize: int = 212
+):
     # check device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # read image and mask
     pil_img = Image.open(img_path)
     pil_mask = Image.open(mask_path)
+
+    # load model
+    model = UNet()
+    model = model.to(device)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+    start_time = time.time()
     # to tensor
     transform = transforms.Compose(
         [transforms.Resize((resize, resize)), transforms.ToTensor()]
     )
     img = transform(pil_img).unsqueeze(0)
     img = img.to(device)
-    # load model
-    model = UNet()
-    model = model.to(device)
-    model.load_state_dict(torch.load(model_path))
-    model.eval()
     # get pred
-    start_time = time.time()
     pred = model(img)
     pred_time = time.time() - start_time
     pred_img = torch.sigmoid(pred)[0]
