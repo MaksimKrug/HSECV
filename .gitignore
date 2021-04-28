@@ -130,3 +130,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Folders
+.vscode/
+Kvasir-SEG/
+*.jpg
+*.pth
+Viz/
