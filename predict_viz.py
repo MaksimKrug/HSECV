@@ -1,4 +1,3 @@
-import glob
 import time
 
 import matplotlib.pyplot as plt
@@ -18,7 +17,6 @@ def pred_and_viz(
     # read image and mask
     pil_img = Image.open(img_path)
     pil_mask = Image.open(mask_path)
-
     # load model
     model = UNet()
     model = model.to(device)

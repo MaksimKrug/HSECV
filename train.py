@@ -28,7 +28,7 @@ def train(model, dataloader_train, dataloader_val, epochs_num=10):
     train_loss, train_accuracy, train_f1 = [], [], []
     val_loss, val_accuracy, val_f1 = [], [], []
 
-    for epoch in range(epochs_num):
+    for epoch in tqdm(range(epochs_num)):
         """
         TRAIN PART
         """
@@ -45,7 +45,7 @@ def train(model, dataloader_train, dataloader_val, epochs_num=10):
             AvgMeter(),
         )
 
-        for batch_num, (x, y) in tqdm(enumerate(dataloader_train)):
+        for batch_num, (x, y) in enumerate(dataloader_train)):
             # get pred
             x = x.to(device)
             y = y.to(device)
@@ -93,19 +93,19 @@ def train(model, dataloader_train, dataloader_val, epochs_num=10):
         scheduler.step(running_f1_val.show().item())  # scheduler step
         # save model if needed
         if running_f1_val.show().item() > best_val_score:
-            print("Greets, new model")
             torch.save(model.state_dict(), "UNet.pth")
             best_val_score = running_f1_val.show().item()
 
-        print("-" * 15)
-        print(f"Epoch: {epoch}")
-        print(
-            f"TRAIN: Loss: {round(running_loss_train.show().item(), 3)}, Accuracy: {round(running_accuracy_train.show().item(), 3)}, F1: {round(running_f1_train.show().item(), 3)}"
-        )
-        print(
-            f"VAL: Loss: {round(running_loss_val.show().item(), 3)}, Accuracy: {round(running_accuracy_val.show().item(), 3)}, F1: {round(running_f1_val.show().item(), 3)}"
-        )
-        print("-" * 15)
+        if epoch % 20 == 0 and epoch != 0:
+            print("-" * 15)
+            print(f"Epoch: {epoch}")
+            print(
+                f"TRAIN: Loss: {round(running_loss_train.show().item(), 3)}, Accuracy: {round(running_accuracy_train.show().item(), 3)}, F1: {round(running_f1_train.show().item(), 3)}"
+            )
+            print(
+                f"VAL: Loss: {round(running_loss_val.show().item(), 3)}, Accuracy: {round(running_accuracy_val.show().item(), 3)}, F1: {round(running_f1_val.show().item(), 3)}"
+            )
+            print("-" * 15)
 
     return train_loss, train_accuracy, train_f1, val_loss, val_accuracy, val_f1
 
@@ -158,6 +158,7 @@ if __name__ == "__main__":
         args.imgs_dir, args.masks_dir, resize=args.resize, batch_size=args.batch_size
     )
 
+    # init model
     model = UNet()
     model = model.to(device)
 
