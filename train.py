@@ -16,10 +16,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
 
 
-def train(model, dataloader_train, dataloader_val, batchsize=8, epochs_num=10):
+def train(model, dataloader_train, dataloader_val, lr, batchsize=8, epochs_num=10):
     # init criterion, optimizer and scheduler
     criterion = structure_loss
-    optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="max", patience=3, factor=0.5
     )

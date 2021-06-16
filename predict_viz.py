@@ -14,6 +14,7 @@ def pred_and_viz(
 ):
     # check device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(device)
     # read image and mask
     pil_img = Image.open(img_path)
     pil_mask = Image.open(mask_path)
