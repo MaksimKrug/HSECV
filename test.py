@@ -4,6 +4,7 @@ import torch
 from tqdm import tqdm
 
 from model import *
+from model_baseline import *
 from utils import *
 
 filterwarnings("ignore")
@@ -18,8 +19,10 @@ def get_test_score(
     # check device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # init model
-    if model_type == 'HarDMSEG':
+    if model_type == 'HardNetMSEG':
         model = HarDMSEG()
+    elif model_type == 'UNet':
+        model = UNet()
     model = model.to(device)
     model.load_state_dict(torch.load(model_path))
     model.eval()

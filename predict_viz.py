@@ -1,5 +1,3 @@
-import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -7,30 +5,34 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 from model import *
+from model_baseline import *
 
 
-def pred_and_viz(
-    img_path, mask_path, model_path: str = "baseline_model.pth", resize: int = 212
-):
+def pred_and_viz(img_path, mask_path, model_type, model_path: str, resize: int, title: str):
     # check device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # read image and mask
     pil_img = Image.open(img_path)
     pil_mask = Image.open(mask_path)
     # load model
-    model = HarDMSEG()
-    model = model.to(device)
+    if model_type == "UNet":
+        model = UNet().to(device)
+        transform = transforms.Compose(
+            [transforms.Resize((resize, resize)), transforms.ToTensor(),]
+        )
+    elif model_type == "HardNetMSEG":
+        model = HarDMSEG().to(device)
+        transform = transforms.Compose(
+            [
+                transforms.Resize((resize, resize)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        )
+
     model.load_state_dict(torch.load(model_path))
     model.eval()
-    start_time = time.time()
     # to tensor
-    transform = transforms.Compose(
-        [
-            transforms.Resize((resize, resize)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        ]
-    )
     transform_input = transforms.Compose(
         [transforms.Resize((resize, resize)), transforms.ToTensor(),]
     )
@@ -40,9 +42,8 @@ def pred_and_viz(
     img = img.to(device)
     # get pred
     pred = model(img)
-    pred_time = time.time() - start_time
     pred_img = torch.sigmoid(pred)[0]
-    mask_pred = pred_img[0] > 0.5
+    mask_pred = pred_img[0] > 0.3
     # get viz data
     img_viz = np.moveaxis(np.array(pil_img), 0, -1)
     mask_viz = np.moveaxis(np.array(pil_mask), 0, -1)
@@ -55,6 +56,7 @@ def pred_and_viz(
     ax[1].title.set_text("GT Mask")
     ax[2].imshow(pred_viz, cmap="gray")
     ax[2].title.set_text("Inference")
+    fig.suptitle(title)
     plt.show()
 
-    return pred_time
+    return img_viz, mask_viz, pred_viz

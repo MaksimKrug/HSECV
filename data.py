@@ -12,13 +12,19 @@ from torch.utils.data import DataLoader, Dataset
 
 class PolypDataset(Dataset):
     def __init__(
-        self, imgs_dir, masks_dir, resize: int = 252, apply_transform: bool = True
+        self,
+        imgs_dir,
+        masks_dir,
+        resize: int = 252,
+        apply_transform: bool = True,
+        model_type: str = "UNet",
     ):
         self.imgs = sorted(imgs_dir)
         self.masks = sorted(masks_dir)
         self.size = len(self.imgs)
         self.resize = resize
         self.apply_transform = apply_transform
+        self.model_type = model_type
         self.transform()  # init transform
 
     def __getitem__(self, index):
@@ -51,42 +57,88 @@ class PolypDataset(Dataset):
         return mask.convert("1")
 
     def transform(self):
-        if self.apply_transform:
-            self.img_transform = transforms.Compose(
-                [
-                    transforms.RandomRotation(90),
-                    transforms.RandomVerticalFlip(p=0.5),
-                    transforms.RandomHorizontalFlip(p=0.5),
-                    transforms.Resize((self.resize, self.resize)),
-                    transforms.ToTensor(),
-                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                ]
-            )
+        if self.model_type == "HardNetMSEG":
+            if self.apply_transform:
+                self.img_transform = transforms.Compose(
+                    [
+                        transforms.RandomRotation(90),
+                        transforms.RandomVerticalFlip(p=0.5),
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+                        ),
+                    ]
+                )
 
-            self.mask_transform = transforms.Compose(
-                [
-                    transforms.RandomRotation(90),
-                    transforms.RandomVerticalFlip(p=0.5),
-                    transforms.RandomHorizontalFlip(p=0.5),
-                    transforms.Resize((self.resize, self.resize)),
-                    transforms.ToTensor(),
-                ]
-            )
-        else:
-            self.img_transform = transforms.Compose(
-                [
-                    transforms.Resize((self.resize, self.resize)),
-                    transforms.ToTensor(),
-                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                ]
-            )
-            self.mask_transform = transforms.Compose(
-                [transforms.Resize((self.resize, self.resize)), transforms.ToTensor()]
-            )
+                self.mask_transform = transforms.Compose(
+                    [
+                        transforms.RandomRotation(90),
+                        transforms.RandomVerticalFlip(p=0.5),
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                    ]
+                )
+            else:
+                self.img_transform = transforms.Compose(
+                    [
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+                        ),
+                    ]
+                )
+                self.mask_transform = transforms.Compose(
+                    [
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                    ]
+                )
+        elif self.model_type == "UNet":
+            if self.apply_transform:
+                self.img_transform = transforms.Compose(
+                    [
+                        transforms.RandomRotation(90),
+                        transforms.RandomVerticalFlip(p=0.5),
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                    ]
+                )
+
+                self.mask_transform = transforms.Compose(
+                    [
+                        transforms.RandomRotation(90),
+                        transforms.RandomVerticalFlip(p=0.5),
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                    ]
+                )
+            else:
+                self.img_transform = transforms.Compose(
+                    [
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                    ]
+                )
+                self.mask_transform = transforms.Compose(
+                    [
+                        transforms.Resize((self.resize, self.resize)),
+                        transforms.ToTensor(),
+                    ]
+                )
 
 
 def get_data(
-    imgs_dir: List[str], masks_dir: List[str], resize: int = 252, batch_size: int = 4
+    imgs_dir: List[str],
+    masks_dir: List[str],
+    resize: int = 252,
+    batch_size: int = 4,
+    model_type: str = "UNet",
 ):
     # split data
     imgs_path = glob.glob(imgs_dir)
@@ -109,9 +161,15 @@ def get_data(
         masks_path[-100:],
     )
     # init datasets
-    dataset_train = PolypDataset(train_imgs, train_masks, resize, apply_transform=True)
-    dataset_test = PolypDataset(test_imgs, test_masks, resize, apply_transform=False)
-    dataset_val = PolypDataset(val_imgs, val_masks, resize, apply_transform=False)
+    dataset_train = PolypDataset(
+        train_imgs, train_masks, resize, apply_transform=True, model_type=model_type
+    )
+    dataset_test = PolypDataset(
+        test_imgs, test_masks, resize, apply_transform=False, model_type=model_type
+    )
+    dataset_val = PolypDataset(
+        val_imgs, val_masks, resize, apply_transform=False, model_type=model_type
+    )
     # init dataloaders
     dataloader_train = DataLoader(
         dataset=dataset_train, batch_size=batch_size, shuffle=True, pin_memory=True
